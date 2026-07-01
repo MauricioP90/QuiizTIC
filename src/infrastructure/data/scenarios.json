@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1",
+    "contexto": "Recibes un correo electrónico urgente del departamento de soporte técnico solicitando tu contraseña temporal para realizar una migración de base de datos obligatoria. Decides no entregarla y reportarlo inmediatamente.",
+    "tipoPractica": "BUENA",
+    "riesgoBeneficio": "Al denegar y reportar la petición, evitas el compromiso de tus credenciales personales y permites al equipo de seguridad alertar a otros usuarios de una campaña activa de phishing.",
+    "recomendacion": "El personal técnico legítimo de TI nunca te solicitará contraseñas por correo ni por chat. Utiliza siempre canales de reporte oficiales."
+  },
+  {
+    "id": "2",
+    "contexto": "Para resolver un fallo crítico en producción durante la noche, compartes las llaves de acceso del servidor de base de datos a través de un canal público de Slack con un compañero que está de guardia.",
+    "tipoPractica": "MALA",
+    "riesgoBeneficio": "Compartir secretos en texto plano en canales compartidos expone las credenciales a interceptación y rompe el registro de auditoría, imposibilitando rastrear quién accedió realmente al servidor.",
+    "recomendacion": "Usa gestores de secretos protegidos (como Vault o 1Password) y asigna accesos temporales con privilegios mínimos para resolución de incidentes."
+  },
+  {
+    "id": "3",
+    "contexto": "Con el fin de cumplir con una fecha límite muy ajustada, omites la fase de revisión de código (Pull Request) y fusionas directamente tus cambios de software a la rama principal de producción.",
+    "tipoPractica": "MALA",
+    "riesgoBeneficio": "Saltarse el control de revisión eleva exponencialmente la probabilidad de desplegar errores lógicos de negocio, fugas de memoria o vulnerabilidades de seguridad a los usuarios finales.",
+    "recomendacion": "La revisión por pares es obligatoria en flujos profesionales. Configura ramas protegidas en tu repositorio para requerir aprobaciones."
+  },
+  {
+    "id": "4",
+    "contexto": "Encuentras una unidad de almacenamiento USB tirada cerca de la máquina de café de la oficina. Decides conectarla a tu equipo de trabajo para buscar archivos que permitan identificar al dueño y devolverla.",
+    "tipoPractica": "MALA",
+    "riesgoBeneficio": "Las unidades USB desconocidas pueden portar código malicioso automatizado (BadUSB / Rubber Ducky) que compromete el sistema operativo al instante de ser conectadas.",
+    "recomendacion": "Si encuentras hardware extraño en las instalaciones de la empresa, entrégalo directamente a seguridad de TI sin conectarlo."
+  },
+  {
+    "id": "5",
+    "contexto": "Te levantas de tu escritorio apresuradamente para ir a una reunión corta y dejas tu computadora de la empresa desbloqueada, confiando plenamente en tus compañeros de equipo de la oficina.",
+    "tipoPractica": "MALA",
+    "riesgoBeneficio": "Dejar la sesión desatendida facilita que cualquier persona (incluidos visitantes o personal de limpieza) acceda o altere datos corporativos protegidos a tu nombre.",
+    "recomendacion": "Adopta el hábito de presionar 'Win + L' (o Cmd + Ctrl + Q en Mac) cada vez que te alejes de tu equipo de cómputo, aunque sea por un minuto."
+  },
+  {
+    "id": "6",
+    "contexto": "Recibes una llamada del supuesto director financiero pidiendo una transferencia bancaria inmediata y confidencial para cerrar una adquisición estratégica de la empresa. Decides colgar y llamarle por su número corporativo verificado.",
+    "tipoPractica": "BUENA",
+    "riesgoBeneficio": "Esta verificación evita fraudes costosos de tipo 'BEC' (Business Email Compromise) y ataques coordinados de ingeniería social telefónica (Vishing).",
+    "recomendacion": "Establece y respeta siempre los protocolos de doble factor de verificación humana antes de ejecutar cualquier transacción monetaria inusual."
+  },
+  {
+    "id": "7",
+    "contexto": "Antes de utilizar una nueva biblioteca de código abierto en el proyecto, revisas su cantidad de descargas, el historial de fallos conocidos y escaneas la dependencia con herramientas de análisis estático de vulnerabilidades (SCA).",
+    "tipoPractica": "BUENA",
+    "riesgoBeneficio": "Detectas fallos conocidos antes de introducirlos a tu software, mitigando ataques de envenenamiento de cadena de suministro y problemas de licenciamiento.",
+    "recomendacion": "Integra herramientas automatizadas como npm audit, Snyk o Dependabot en tu flujo de desarrollo para auditorías de dependencias continuas."
+  }
+]
