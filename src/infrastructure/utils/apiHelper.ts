@@ -1,5 +1,5 @@
 export const getApiUrl = (path: string): string => {
-  const isDev = window.location.port === '5173'; // Vite dev server
-  const host = isDev ? `${window.location.hostname}:3000` : window.location.host;
-  return `${window.location.protocol}//${host}${path}`;
+  // Siempre usamos el mismo host y puerto del frontend.
+  // La redirección al backend se maneja mediante el proxy de Vite (en desarrollo) o Nginx (en producción).
+  return `${window.location.protocol}//${window.location.host}${path}`;
 };

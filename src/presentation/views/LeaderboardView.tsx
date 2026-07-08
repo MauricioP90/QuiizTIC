@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BaseButton } from '../../shared/components/BaseButton';
-import { Trophy, ShieldAlert, ShieldCheck, KeyRound, Loader2, ArrowLeft, RefreshCw, Car } from 'lucide-react';
+import { Trophy, ShieldAlert, Loader2, ArrowLeft, RefreshCw, Car } from 'lucide-react';
 import { getApiUrl } from '../../infrastructure/utils/apiHelper';
 import vaciosImg from '../../assets/vacios.png';
 
@@ -13,57 +13,35 @@ interface LeaderboardEntry {
   totalPuntosAcumulados: number;
 }
 
+const FRONTEND_PIN = '14789'; // PIN esperado por el backend para autorizar la petición
+
 export const LeaderboardView: React.FC = () => {
-  const [pinInput, setPinInput] = useState('');
-  const [authorizedPin, setAuthorizedPin] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleVerifyPin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      const response = await fetch(getApiUrl('/api/leaderboard'), {
-        headers: {
-          'x-admin-pin': pinInput
-        }
-      });
-
-      if (response.status === 401) {
-        setError('PIN de administrador incorrecto. Acceso denegado.');
-        setPinInput('');
-      } else if (!response.ok) {
-        throw new Error('Error al obtener la tabla de posiciones.');
-      } else {
-        const data = await response.json();
-        setEntries(data);
-        setAuthorizedPin(pinInput);
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Error de conexión con el servidor.');
-    } finally {
-      setLoading(false);
+  const handleGoBack = () => {
+    if (window.location.search.includes('leaderboard')) {
+      window.location.search = '';
+    } else {
+      window.location.pathname = '/';
     }
   };
 
   const fetchRanking = async () => {
-    if (!authorizedPin) return;
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(getApiUrl('/api/leaderboard'), {
         headers: {
-          'x-admin-pin': authorizedPin
+          'x-admin-pin': FRONTEND_PIN
         }
       });
       if (response.ok) {
         const data = await response.json();
         setEntries(data);
       } else {
-        throw new Error('Error al actualizar el ranking.');
+        throw new Error('Error al obtener la tabla de posiciones desde el servidor.');
       }
     } catch (err: any) {
       setError(err?.message || 'Error al conectar con el servidor.');
@@ -72,78 +50,10 @@ export const LeaderboardView: React.FC = () => {
     }
   };
 
-  // Pantalla de Ingreso de PIN
-  if (!authorizedPin) {
-    return (
-      <div className="flex-grow flex flex-col items-center justify-center p-4 md:p-8 animate-fade-in-up">
-        <div className="w-full max-w-md glass-panel p-8 rounded-3xl text-center relative overflow-hidden">
-          {/* Glow effects */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl" />
-          
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 shadow-inner">
-              <KeyRound className="w-12 h-12 text-indigo-400" />
-            </div>
-          </div>
+  useEffect(() => {
+    fetchRanking();
+  }, []);
 
-          <h2 className="text-2xl font-black text-slate-100 mb-2">Acceso Administrativo</h2>
-          <p className="text-sm text-slate-400 mb-6">
-            Ingresa el código PIN para desplegar la Tabla de Posiciones oficial.
-          </p>
-
-          {error && (
-            <div className="mb-5 p-3 bg-rose-950/40 border border-rose-800/40 rounded-xl text-rose-300 text-sm font-semibold flex items-center justify-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleVerifyPin} className="space-y-4">
-            <input
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
-              placeholder="PIN de Seguridad"
-              className="w-full text-center tracking-widest text-lg py-3.5 bg-slate-950/60 hover:bg-slate-950/80 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl text-slate-200 focus:outline-none transition-colors"
-              disabled={loading}
-              maxLength={10}
-            />
-
-            <BaseButton
-              type="submit"
-              variant="primary"
-              disabled={loading || !pinInput}
-              className="w-full py-3.5 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Verificando...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-5 h-5" />
-                  <span>Verificar Identidad</span>
-                </>
-              )}
-            </BaseButton>
-          </form>
-
-          <button
-            onClick={() => window.location.search = ''}
-            className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Volver a la Trivia
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Pantalla de Leaderboard (Top 10)
   return (
     <div className="flex-grow max-w-4xl w-full mx-auto p-4 md:p-8 animate-fade-in">
       <div className="glass-panel p-6 md:p-10 rounded-3xl relative overflow-hidden shadow-2xl">
@@ -176,7 +86,7 @@ export const LeaderboardView: React.FC = () => {
             </button>
             <BaseButton
               variant="ghost"
-              onClick={() => window.location.search = ''}
+              onClick={handleGoBack}
               className="flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -187,7 +97,27 @@ export const LeaderboardView: React.FC = () => {
 
         {/* Cuerpo / Tabla */}
         <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-slate-950/20">
-          {entries.length === 0 ? (
+          {loading ? (
+            <div className="py-24 flex flex-col items-center justify-center text-center gap-4">
+              <Loader2 className="w-12 h-12 animate-spin text-indigo-500" />
+              <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">
+                Cargando posiciones...
+              </span>
+            </div>
+          ) : error ? (
+            <div className="py-16 flex flex-col items-center justify-center text-center px-4">
+              <ShieldAlert className="w-12 h-12 text-rose-500 mb-4 animate-bounce" />
+              <p className="text-rose-400 font-semibold text-sm mb-2">
+                {error}
+              </p>
+              <button
+                onClick={fetchRanking}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition-colors"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : entries.length === 0 ? (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4">
               <img 
                 src={vaciosImg} 

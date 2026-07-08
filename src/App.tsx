@@ -26,7 +26,7 @@ function App() {
 
   const [step, setStep] = useState<'welcome' | 'register'>('welcome');
 
-  const isLeaderboardUrl = window.location.search.includes('leaderboard=true');
+  const isLeaderboardUrl = window.location.pathname.endsWith('/leaderboard') || window.location.search.includes('leaderboard=true');
 
   if (isLeaderboardUrl) {
     return (

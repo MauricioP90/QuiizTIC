@@ -18,15 +18,15 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-600/20 rounded-full blur-3xl" />
 
         <div className="flex justify-center mb-6">
-          <img 
-            src={cibersecurityImg} 
-            alt="Cybersecurity Hero" 
-            className="w-40 h-40 object-contain animate-float shadow-character" 
+          <img
+            src={cibersecurityImg}
+            alt="Cybersecurity Hero"
+            className="w-40 h-40 object-contain animate-float shadow-character"
           />
         </div>
 
         <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-200 to-cyan-400">
-          Cibersecurity - 101
+          CiberTrivia
         </h1>
 
         <p className="text-slate-400 text-lg md:text-xl font-medium max-w-lg mx-auto mb-10 leading-relaxed">
@@ -66,7 +66,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
           >
             Comenzar Desafío
           </BaseButton>
-          
+
           <button
             onClick={() => setShowQR(true)}
             className="flex items-center gap-2 px-6 py-4 text-sm font-semibold rounded-xl border border-slate-700 bg-slate-800/40 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center"
