@@ -30,5 +30,11 @@ export const AppDataSource = new DataSource({
     PuntosAcumuladosSchema
   ],
   subscribers: [],
-  migrations: []
+  migrations: [],
+  // Pool de conexiones: soporta múltiples usuarios simultáneos
+  extra: {
+    connectionLimit: 20,      // Máximo 20 conexiones abiertas al mismo tiempo
+    acquireTimeout: 10000,    // Esperar hasta 10 seg si el pool está ocupado
+    waitForConnections: true  // Encolar peticiones si no hay conexión disponible
+  }
 });
