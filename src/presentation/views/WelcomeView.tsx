@@ -1,36 +1,77 @@
 import React, { useState } from 'react';
-import { BaseButton } from '../../shared/components/BaseButton';
-import { Sparkles, Zap, Award, QrCode } from 'lucide-react';
+import { Sparkles, Zap, Award, QrCode, Shield, Settings, Trophy } from 'lucide-react';
 import cibersecurityImg from '../../assets/cibersecurity.png';
+import { useActiveEvent } from '../../shared/context/EventContext';
 
 interface WelcomeViewProps {
   onStart: () => void;
+  onOpenAdmin?: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
-export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
+export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, onOpenAdmin, onOpenLeaderboard }) => {
   const [showQR, setShowQR] = useState(false);
+  const { activeEvent, theme } = useActiveEvent();
+
+  const title = activeEvent?.nombre || 'CiberTrivia';
+  const description =
+    activeEvent?.descripcion ||
+    'Pon a prueba tus conocimientos en situaciones cotidianas y laborales.';
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 animate-fade-in-up">
+      {/* Barra superior con accesos a Ranking y Admin */}
+      <div className="w-full max-w-2xl flex justify-between items-center mb-2 px-1">
+        <button
+          onClick={onOpenLeaderboard || (() => { window.location.search = '?leaderboard=true'; })}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-slate-800 transition-colors text-xs font-semibold backdrop-blur-sm shadow-sm"
+          title="Ver Tabla de Posiciones"
+        >
+          <Trophy className="w-3.5 h-3.5 text-amber-400" />
+          <span>Ranking / Posiciones</span>
+        </button>
+
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors text-xs font-semibold backdrop-blur-sm shadow-sm"
+            title="Administración de Eventos y Temas"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span>Admin</span>
+          </button>
+        )}
+      </div>
+
       <div className="w-full max-w-2xl glass-panel p-8 md:p-12 rounded-3xl relative overflow-hidden text-center">
-        {/* Glow Effects */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-600/20 rounded-full blur-3xl" />
+        {/* Glow Effects dinámicos del Tema */}
+        <div className={`absolute -top-24 -left-24 w-48 h-48 ${theme.glowTopLeft} rounded-full blur-3xl`} />
+        <div className={`absolute -bottom-24 -right-24 w-48 h-48 ${theme.glowBottomRight} rounded-full blur-3xl`} />
+
+        {/* Badge del evento si tiene categorías filtradas */}
+        {activeEvent && activeEvent.categorias && activeEvent.categorias.length > 0 && (
+          <div className="mb-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300">
+            <Shield className="w-3.5 h-3.5 text-indigo-400" />
+            <span>{activeEvent.categorias.join(' • ')}</span>
+          </div>
+        )}
 
         <div className="flex justify-center mb-6">
           <img
             src={cibersecurityImg}
-            alt="Cybersecurity Hero"
+            alt="Hero Icon"
             className="w-40 h-40 object-contain animate-float shadow-character"
           />
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-200 to-cyan-400">
-          CiberTrivia
+        <h1
+          className={`text-4xl md:text-5xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r ${theme.titleGradient}`}
+        >
+          {title}
         </h1>
 
         <p className="text-slate-400 text-lg md:text-xl font-medium max-w-lg mx-auto mb-10 leading-relaxed">
-          Pon a prueba tus conocimientos sobre ciberseguridad en tu hogar, empresa y vida diaria.
+          {description}
         </p>
 
         {/* Características breves */}
@@ -39,14 +80,14 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
             <Zap className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-sm font-semibold text-slate-200">Tiempo Límite</h4>
-              <p className="text-xs text-slate-400">3 minuto por decisión.</p>
+              <p className="text-xs text-slate-400">3 minutos por decisión.</p>
             </div>
           </div>
           <div className="p-4 bg-slate-900/40 rounded-xl border border-slate-800/40 flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-sm font-semibold text-slate-200">Retroalimentación</h4>
-              <p className="text-xs text-slate-400">Conviértete en todo un experto en ciberseguridad.</p>
+              <p className="text-xs text-slate-400">Aprende al instante con justificaciones tácticas.</p>
             </div>
           </div>
           <div className="p-4 bg-slate-900/40 rounded-xl border border-slate-800/40 flex items-start gap-3">
@@ -59,13 +100,12 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <BaseButton
-            variant="primary"
+          <button
             onClick={onStart}
-            className="px-10 py-4 text-lg shadow-xl w-full sm:w-auto"
+            className={`px-10 py-4 text-lg font-bold rounded-xl transition-all transform active:scale-95 w-full sm:w-auto shadow-xl ${theme.primaryButton}`}
           >
             Comenzar Desafío
-          </BaseButton>
+          </button>
 
           <button
             onClick={() => setShowQR(true)}
@@ -92,7 +132,9 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart }) => {
               </p>
               <div className="bg-white p-4 rounded-xl inline-block mb-6 shadow-md">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                    window.location.origin
+                  )}`}
                   alt="QR de Acceso"
                   className="w-48 h-48 mx-auto"
                 />

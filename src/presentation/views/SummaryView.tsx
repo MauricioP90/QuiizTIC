@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import type { GameSession } from '../../domain/entities/GameSession';
+import type { Participant } from '../../domain/entities/Participant';
 import type { AccumulatedScore } from '../controllers/useGameController';
 import { BaseButton } from '../../shared/components/BaseButton';
-import { RotateCcw, Eye, EyeOff, CheckCircle, XCircle, Clock, BookOpen, LogOut, TrendingUp } from 'lucide-react';
+import { RotateCcw, Eye, EyeOff, CheckCircle, XCircle, Clock, BookOpen, LogOut, TrendingUp, UserCheck, Car, Trophy } from 'lucide-react';
 
 import desempeñoImpecableImg from '../../assets/desempeñoImpecable.png';
 import resultadoImg from '../../assets/resultado.png';
@@ -10,12 +11,13 @@ import refuerzoNecesarioImg from '../../assets/refuerzoNecesario.png';
 
 interface SummaryViewProps {
   session: GameSession;
+  participant?: Participant | null;
   accumulatedResults: AccumulatedScore | null;
   onRestart: () => void;
   onLogout: () => void;
 }
 
-export const SummaryView: React.FC<SummaryViewProps> = ({ session, accumulatedResults, onRestart, onLogout }) => {
+export const SummaryView: React.FC<SummaryViewProps> = ({ session, participant, accumulatedResults, onRestart, onLogout }) => {
   const [showHistory, setShowHistory] = useState(false);
   const total = session.scenarios.length;
   const score = session.score;
@@ -53,6 +55,24 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ session, accumulatedRe
             className="w-40 h-40 md:w-44 md:h-44 object-contain animate-float shadow-character" 
           />
         </div>
+
+        {participant && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 rounded-full bg-slate-900/70 border border-slate-800 text-xs text-slate-300">
+            {participant.nombreParticipante ? (
+              <>
+                <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-semibold text-slate-200">{participant.nombreParticipante}</span>
+                <span className="text-[10px] text-slate-500 font-mono">(C.C. {participant.documento || participant.numeroVehiculo})</span>
+              </>
+            ) : (
+              <>
+                <Car className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-semibold text-slate-200">Vehículo {participant.numeroVehiculo}</span>
+                <span className="text-[10px] text-slate-500 font-semibold">({participant.rol})</span>
+              </>
+            )}
+          </div>
+        )}
 
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest block mb-1">
           Resultados de Ronda
@@ -156,6 +176,17 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ session, accumulatedRe
           >
             <RotateCcw className="w-5 h-5" />
             <span>Volver a Jugar</span>
+          </BaseButton>
+
+          <BaseButton
+            variant="secondary"
+            onClick={() => {
+              window.location.search = '?leaderboard=true';
+            }}
+            className="flex-1 flex items-center justify-center gap-2 text-amber-300 hover:text-amber-200 border-amber-500/30 hover:bg-amber-500/10"
+          >
+            <Trophy className="w-5 h-5 text-amber-400" />
+            <span>Ver Ranking</span>
           </BaseButton>
 
           <BaseButton

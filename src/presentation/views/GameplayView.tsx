@@ -5,7 +5,7 @@ import type { Scenario } from '../../domain/entities/Scenario';
 import { GameTimer } from '../components/GameTimer';
 import { ScenarioCard } from '../components/ScenarioCard';
 import { FeedbackModal } from '../components/FeedbackModal';
-import { LogOut, Car } from 'lucide-react';
+import { LogOut, Car, UserCheck } from 'lucide-react';
 
 interface GameplayViewProps {
   participant: Participant;
@@ -38,13 +38,26 @@ export const GameplayView: React.FC<GameplayViewProps> = ({
       <header className="flex justify-between items-center mb-8 pb-4 border-b border-slate-800/80">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
-            <Car className="w-5 h-5" />
+            {participant.nombreParticipante ? <UserCheck className="w-5 h-5 text-emerald-400" /> : <Car className="w-5 h-5" />}
           </div>
           <div className="text-left">
-            <p className="text-sm font-bold text-slate-200">Vehículo: {participant.numeroVehiculo}</p>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
-              Rol: {participant.rol}
-            </p>
+            {participant.nombreParticipante ? (
+              <>
+                <p className="text-sm font-bold text-slate-100 max-w-[220px] sm:max-w-xs truncate" title={participant.nombreParticipante}>
+                  {participant.nombreParticipante}
+                </p>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                  C.C. {participant.documento || participant.numeroVehiculo}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-bold text-slate-200">Vehículo: {participant.numeroVehiculo}</p>
+                <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                  Rol: {participant.rol}
+                </p>
+              </>
+            )}
           </div>
         </div>
         

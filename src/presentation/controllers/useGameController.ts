@@ -100,10 +100,20 @@ export function useGameController() {
     };
   }, [session?.currentIndex, showFeedback, session?.isGameOver, participant]);
 
-  const register = async (numeroVehiculo: string, rol: 'PROPIETARIO' | 'OPERADOR') => {
+  const register = async (
+    numeroVehiculo: string,
+    rol: 'PROPIETARIO' | 'OPERADOR',
+    documento?: string | null,
+    nombreParticipante?: string | null
+  ) => {
     setIsLoading(true);
     try {
-      const newParticipant = await registerNewParticipantUseCase.execute(numeroVehiculo, rol);
+      const newParticipant = await registerNewParticipantUseCase.execute(
+        numeroVehiculo,
+        rol,
+        documento,
+        nombreParticipante
+      );
       setParticipant(newParticipant);
       setAccumulatedResults(null);
       const scenarios = await getRandomScenariosUseCase.execute(1, newParticipant.numeroVehiculo, newParticipant.rol);
@@ -139,7 +149,9 @@ export function useGameController() {
           numeroVehiculo: participant.numeroVehiculo,
           rol: participant.rol,
           idPregunta: session.scenarios[session.currentIndex].id,
-          respuesta: answer
+          respuesta: answer,
+          documento: participant.documento || null,
+          nombreParticipante: participant.nombreParticipante || null
         })
       });
     } catch (error) {

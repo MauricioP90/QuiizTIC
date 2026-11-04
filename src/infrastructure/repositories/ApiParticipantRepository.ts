@@ -21,7 +21,6 @@ export class ApiParticipantRepository implements IParticipantRepository {
     if (lsVal) {
       try {
         const participant = JSON.parse(lsVal) as Participant;
-        // Restaurar cookie para consistencia
         CookieManager.setCookie(this.COOKIE_NAME, lsVal, 7);
         return participant;
       } catch {
@@ -47,7 +46,9 @@ export class ApiParticipantRepository implements IParticipantRepository {
         },
         body: JSON.stringify({
           numeroVehiculo: participant.numeroVehiculo,
-          rol: participant.rol
+          rol: participant.rol,
+          documento: participant.documento || null,
+          nombreParticipante: participant.nombreParticipante || null
         })
       });
       if (!response.ok) {

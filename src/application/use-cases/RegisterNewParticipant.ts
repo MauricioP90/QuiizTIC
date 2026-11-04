@@ -8,9 +8,13 @@ export class RegisterNewParticipant {
     this.participantRepo = participantRepo;
   }
 
-  async execute(numeroVehiculo: string, rol: 'PROPIETARIO' | 'OPERADOR'): Promise<Participant> {
-    if (!numeroVehiculo.trim()) throw new Error('El número de vehículo es requerido.');
-    if (rol !== 'PROPIETARIO' && rol !== 'OPERADOR') throw new Error('El rol debe ser PROPIETARIO o OPERADOR.');
+  async execute(
+    numeroVehiculo: string,
+    rol: 'PROPIETARIO' | 'OPERADOR',
+    documento?: string | null,
+    nombreParticipante?: string | null
+  ): Promise<Participant> {
+    if (!numeroVehiculo.trim()) throw new Error('El número de identificación o vehículo es requerido.');
 
     const uuid = typeof crypto !== 'undefined' && crypto.randomUUID 
       ? crypto.randomUUID() 
@@ -20,6 +24,8 @@ export class RegisterNewParticipant {
       uuid,
       numeroVehiculo: numeroVehiculo.trim(),
       rol,
+      documento: documento || null,
+      nombreParticipante: nombreParticipante || null,
       registradoEn: new Date()
     };
 
