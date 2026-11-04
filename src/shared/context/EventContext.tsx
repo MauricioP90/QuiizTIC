@@ -13,6 +13,7 @@ export interface ActiveEventData {
   categorias: string[];
   tema: string;
   tipoRegistro: TipoRegistro;
+  mostrarRanking?: boolean;
   activo: boolean;
 }
 
@@ -32,6 +33,7 @@ const defaultEvent: ActiveEventData = {
   categorias: [],
   tema: 'macarena',
   tipoRegistro: 'VEHICULO',
+  mostrarRanking: true,
   activo: true
 };
 

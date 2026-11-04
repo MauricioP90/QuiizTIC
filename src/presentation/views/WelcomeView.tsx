@@ -22,14 +22,18 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, onOpenAdmin, 
     <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 animate-fade-in-up">
       {/* Barra superior con accesos a Ranking y Admin */}
       <div className="w-full max-w-2xl flex justify-between items-center mb-2 px-1">
-        <button
-          onClick={onOpenLeaderboard || (() => { window.location.search = '?leaderboard=true'; })}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-slate-800 transition-colors text-xs font-semibold backdrop-blur-sm shadow-sm"
-          title="Ver Tabla de Posiciones"
-        >
-          <Trophy className="w-3.5 h-3.5 text-amber-400" />
-          <span>Ranking / Posiciones</span>
-        </button>
+        {activeEvent?.mostrarRanking !== false ? (
+          <button
+            onClick={onOpenLeaderboard || (() => { window.location.search = '?leaderboard=true'; })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-slate-800 transition-colors text-xs font-semibold backdrop-blur-sm shadow-sm"
+            title="Ver Tabla de Posiciones"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <span>Ranking / Posiciones</span>
+          </button>
+        ) : (
+          <div />
+        )}
 
         {onOpenAdmin && (
           <button

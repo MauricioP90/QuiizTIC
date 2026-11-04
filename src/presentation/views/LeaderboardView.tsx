@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BaseButton } from '../../shared/components/BaseButton';
-import { Trophy, ShieldAlert, Loader2, ArrowLeft, RefreshCw, Car, UserCheck } from 'lucide-react';
+import { Trophy, ShieldAlert, Loader2, ArrowLeft, RefreshCw, Car, UserCheck, Lock } from 'lucide-react';
 import { getApiUrl } from '../../infrastructure/utils/apiHelper';
 import { useActiveEvent } from '../../shared/context/EventContext';
 import vaciosImg from '../../assets/vacios.png';
@@ -21,6 +21,7 @@ export const LeaderboardView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRankingHidden, setIsRankingHidden] = useState(false);
 
   const isCedulaMode = activeEvent?.tipoRegistro === 'CEDULA';
 
@@ -44,6 +45,14 @@ export const LeaderboardView: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setEntries(data);
+        setIsRankingHidden(false);
+      } else if (response.status === 403) {
+        const errData = await response.json().catch(() => null);
+        if (errData?.rankingOculto) {
+          setIsRankingHidden(true);
+        } else {
+          throw new Error('Acceso restringido a la tabla de posiciones.');
+        }
       } else {
         throw new Error('Error al obtener la tabla de posiciones desde el servidor.');
       }
@@ -57,6 +66,49 @@ export const LeaderboardView: React.FC = () => {
   useEffect(() => {
     fetchRanking();
   }, [activeEvent?.id]);
+
+  const rankingOculto = isRankingHidden || activeEvent?.mostrarRanking === false;
+
+  if (rankingOculto) {
+    return (
+      <div className="flex-grow max-w-xl w-full mx-auto p-4 sm:p-8 animate-fade-in flex items-center justify-center">
+        <div className="glass-panel p-8 sm:p-12 rounded-3xl relative overflow-hidden shadow-2xl border border-amber-500/30 text-center w-full">
+          {/* Glow effects dinámicos del tema */}
+          <div className={`absolute -top-24 -left-24 w-48 h-48 ${theme.glowTopLeft} rounded-full blur-3xl`} />
+          <div className={`absolute -bottom-24 -right-24 w-48 h-48 ${theme.glowBottomRight} rounded-full blur-3xl`} />
+
+          <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-400 shadow-inner">
+            <Lock className="w-8 h-8 animate-pulse" />
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-3 bg-slate-900/70 border border-slate-800 text-slate-300">
+            <span className={theme.accentText}>{activeEvent?.nombre || 'QuizzTIC'}</span>
+            <span>•</span>
+            <span className="text-amber-400">Modo Suspenso</span>
+          </div>
+
+          <h2 className={`text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r ${theme.titleGradient} mb-3`}>
+            Tabla de Posiciones en Suspenso
+          </h2>
+
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-md mx-auto mb-8">
+            🔒 El podio de ganadores se revelará al cierre del evento por el equipo organizador. ¡Sigue participando, respondiendo los escenarios y acumulando puntos!
+          </p>
+
+          <div className="flex justify-center">
+            <BaseButton
+              variant="primary"
+              onClick={handleGoBack}
+              className="flex items-center gap-2 py-3 px-6 shadow-lg"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver a la Trivia</span>
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-grow max-w-4xl w-full mx-auto p-3 sm:p-6 md:p-8 animate-fade-in">

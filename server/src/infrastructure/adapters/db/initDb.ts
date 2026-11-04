@@ -13,12 +13,13 @@ export async function initializeDatabaseSchema(dataSource: DataSource): Promise<
         categorias TEXT NOT NULL,
         tema VARCHAR(50) NOT NULL DEFAULT 'cyber',
         tipo_registro VARCHAR(20) NOT NULL DEFAULT 'VEHICULO',
+        mostrar_ranking BOOLEAN NOT NULL DEFAULT TRUE,
         activo BOOLEAN NOT NULL DEFAULT FALSE,
         creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
 
-    // 1.1 Verificar y agregar tipo_registro a eventos si la tabla ya existía
+    // 1.1 Verificar y agregar tipo_registro y mostrar_ranking a eventos si la tabla ya existía
     const colTipoReg = await dataSource.query(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() 
@@ -31,6 +32,20 @@ export async function initializeDatabaseSchema(dataSource: DataSource): Promise<
         ALTER TABLE eventos ADD COLUMN tipo_registro VARCHAR(20) NOT NULL DEFAULT 'VEHICULO';
       `);
       console.log('Columna "tipo_registro" agregada a la tabla "eventos".');
+    }
+
+    const colMostrarRanking = await dataSource.query(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'eventos' 
+        AND COLUMN_NAME = 'mostrar_ranking';
+    `);
+
+    if (colMostrarRanking.length === 0) {
+      await dataSource.query(`
+        ALTER TABLE eventos ADD COLUMN mostrar_ranking BOOLEAN NOT NULL DEFAULT TRUE;
+      `);
+      console.log('Columna "mostrar_ranking" agregada a la tabla "eventos".');
     }
 
     // 2. Verificar y agregar columnas a registro_respuestas

@@ -29,6 +29,7 @@ export class EventController {
           categorias: [],
           tema: 'macarena',
           tipoRegistro: 'VEHICULO',
+          mostrarRanking: true,
           activo: true
         });
         return;
@@ -71,7 +72,7 @@ export class EventController {
       return;
     }
 
-    const { nombre, descripcion, fechaInicio, fechaFin, categorias, tema, tipoRegistro, activo } = req.body;
+    const { nombre, descripcion, fechaInicio, fechaFin, categorias, tema, tipoRegistro, mostrarRanking, activo } = req.body;
     if (!nombre || !nombre.trim()) {
       res.status(400).json({ error: 'El nombre del evento es obligatorio.' });
       return;
@@ -86,6 +87,7 @@ export class EventController {
         categorias: Array.isArray(categorias) ? categorias : [],
         tema: tema || 'macarena',
         tipoRegistro: tipoRegistro || 'VEHICULO',
+        mostrarRanking: mostrarRanking !== undefined ? Boolean(mostrarRanking) : true,
         activo: Boolean(activo)
       });
       res.status(201).json(created);
@@ -102,7 +104,7 @@ export class EventController {
     }
 
     const id = parseInt(req.params.id);
-    const { nombre, descripcion, fechaInicio, fechaFin, categorias, tema, tipoRegistro, activo } = req.body;
+    const { nombre, descripcion, fechaInicio, fechaFin, categorias, tema, tipoRegistro, mostrarRanking, activo } = req.body;
 
     if (isNaN(id) || !nombre || !nombre.trim()) {
       res.status(400).json({ error: 'Parámetros inválidos para actualizar el evento.' });
@@ -119,6 +121,7 @@ export class EventController {
         categorias: Array.isArray(categorias) ? categorias : [],
         tema: tema || 'macarena',
         tipoRegistro: tipoRegistro || 'VEHICULO',
+        mostrarRanking: mostrarRanking !== undefined ? Boolean(mostrarRanking) : true,
         activo: Boolean(activo)
       });
       res.json(updated);

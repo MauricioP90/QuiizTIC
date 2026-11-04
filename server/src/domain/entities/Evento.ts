@@ -11,6 +11,7 @@ export class Evento {
     public readonly tema: string,
     public readonly tipoRegistro: TipoRegistro,
     public readonly activo: boolean,
+    public readonly mostrarRanking: boolean = true,
     public readonly creadoEn?: Date
   ) {}
 }

@@ -18,7 +18,10 @@ import {
   Car,
   IdCard,
   UserCheck,
-  Users
+  Users,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { getApiUrl } from '../../infrastructure/utils/apiHelper';
 import { THEMES, type ThemeId } from '../../shared/theme/themeConfig';
@@ -59,6 +62,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [formCategorias, setFormCategorias] = useState<string[]>([]);
   const [formTema, setFormTema] = useState<ThemeId>('macarena');
   const [formTipoRegistro, setFormTipoRegistro] = useState<TipoRegistro>('VEHICULO');
+  const [formMostrarRanking, setFormMostrarRanking] = useState(true);
   const [formActivo, setFormActivo] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -132,11 +136,13 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
-  // Cargar ranking por evento (público)
+  // Cargar ranking por evento (con autorización admin para ver en tiempo real)
   const loadLeaderboard = async (eventId: number) => {
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch(getApiUrl(`/api/leaderboard?evento=${eventId}`));
+      const res = await fetch(getApiUrl(`/api/leaderboard?evento=${eventId}`), {
+        headers: adminPin ? { 'x-admin-pin': adminPin } : {}
+      });
       if (res.ok) {
         const data = await res.json();
         setLeaderboardEntries(data);
@@ -190,6 +196,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFormCategorias([]);
     setFormTema('macarena');
     setFormTipoRegistro('VEHICULO');
+    setFormMostrarRanking(true);
     setFormActivo(true);
     setShowForm(true);
   };
@@ -204,6 +211,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFormCategorias(ev.categorias || []);
     setFormTema((ev.tema as ThemeId) || 'macarena');
     setFormTipoRegistro(ev.tipoRegistro || 'VEHICULO');
+    setFormMostrarRanking(ev.mostrarRanking !== false);
     setFormActivo(ev.activo);
     setShowForm(true);
   };
@@ -227,6 +235,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       categorias: formCategorias,
       tema: formTema,
       tipoRegistro: formTipoRegistro,
+      mostrarRanking: formMostrarRanking,
       activo: formActivo
     };
 
@@ -394,6 +403,23 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   ) : (
                     <>
                       <Car className="w-3 h-3" /> Por Vehículo
+                    </>
+                  )}
+                </span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 ${
+                    activeEvent.mostrarRanking !== false
+                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                  }`}
+                >
+                  {activeEvent.mostrarRanking !== false ? (
+                    <>
+                      <Trophy className="w-3 h-3 text-amber-400" /> Ranking Visible
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3 text-amber-400" /> Ranking en Suspenso
                     </>
                   )}
                 </span>
@@ -635,6 +661,64 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </div>
                 </div>
 
+                {/* Control de Visibilidad de la Tabla de Posiciones / Ranking */}
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    Visibilidad del Podio / Ranking a Participantes
+                  </label>
+                  <div
+                    onClick={() => setFormMostrarRanking(!formMostrarRanking)}
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                      formMostrarRanking
+                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-200'
+                        : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                          formMostrarRanking
+                            ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                            : 'bg-slate-900 border-slate-850 text-slate-500'
+                        }`}
+                      >
+                        {formMostrarRanking ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                          {formMostrarRanking ? (
+                            <>
+                              <span>🏆 Ranking Público Activado</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>🔒 Modo Suspenso (Ranking Oculto)</span>
+                            </>
+                          )}
+                        </h5>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {formMostrarRanking
+                            ? 'Los participantes ven el botón en cabecera y pueden consultar la tabla de posiciones en tiempo real.'
+                            : 'Oculta el botón y protege la tabla para mantener la emoción y revelar a los ganadores al final.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        formMostrarRanking ? 'bg-amber-500' : 'bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          formMostrarRanking ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Checkbox Activar de inmediato */}
                 <div className="pt-2">
                   <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-300">
@@ -697,6 +781,15 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                           ACTIVO
                         </span>
                       )}
+                      {ev.mostrarRanking === false ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" /> Suspenso
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                          <Trophy className="w-2.5 h-2.5 text-amber-400" /> Ranking
+                        </span>
+                      )}
                     </div>
                     {ev.descripcion && (
                       <p className="text-xs text-slate-400 line-clamp-1">{ev.descripcion}</p>
@@ -754,7 +847,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             >
               {events.map((ev) => (
                 <option key={ev.id} value={ev.id}>
-                  {ev.nombre} {ev.activo ? '(Activo)' : ''}
+                  {ev.nombre} {ev.activo ? '(Activo)' : ''} {ev.mostrarRanking === false ? '🔒 (Oculto)' : ''}
                 </option>
               ))}
             </select>

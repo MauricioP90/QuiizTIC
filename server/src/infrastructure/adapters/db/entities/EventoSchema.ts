@@ -26,6 +26,9 @@ export class EventoSchema {
   @Column({ name: 'tipo_registro', type: 'varchar', length: 20, default: 'VEHICULO' })
   tipoRegistro!: 'VEHICULO' | 'CEDULA';
 
+  @Column({ name: 'mostrar_ranking', type: 'boolean', default: true })
+  mostrarRanking!: boolean;
+
   @Column({ type: 'boolean', default: false })
   activo!: boolean;
 

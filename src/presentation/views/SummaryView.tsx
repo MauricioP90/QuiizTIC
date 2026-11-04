@@ -4,6 +4,7 @@ import type { Participant } from '../../domain/entities/Participant';
 import type { AccumulatedScore } from '../controllers/useGameController';
 import { BaseButton } from '../../shared/components/BaseButton';
 import { RotateCcw, Eye, EyeOff, CheckCircle, XCircle, Clock, BookOpen, LogOut, TrendingUp, UserCheck, Car, Trophy } from 'lucide-react';
+import { useActiveEvent } from '../../shared/context/EventContext';
 
 import desempeñoImpecableImg from '../../assets/desempeñoImpecable.png';
 import resultadoImg from '../../assets/resultado.png';
@@ -18,6 +19,7 @@ interface SummaryViewProps {
 }
 
 export const SummaryView: React.FC<SummaryViewProps> = ({ session, participant, accumulatedResults, onRestart, onLogout }) => {
+  const { activeEvent } = useActiveEvent();
   const [showHistory, setShowHistory] = useState(false);
   const total = session.scenarios.length;
   const score = session.score;
@@ -178,16 +180,18 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ session, participant, 
             <span>Volver a Jugar</span>
           </BaseButton>
 
-          <BaseButton
-            variant="secondary"
-            onClick={() => {
-              window.location.search = '?leaderboard=true';
-            }}
-            className="flex-1 flex items-center justify-center gap-2 text-amber-300 hover:text-amber-200 border-amber-500/30 hover:bg-amber-500/10"
-          >
-            <Trophy className="w-5 h-5 text-amber-400" />
-            <span>Ver Ranking</span>
-          </BaseButton>
+          {activeEvent?.mostrarRanking !== false && (
+            <BaseButton
+              variant="secondary"
+              onClick={() => {
+                window.location.search = '?leaderboard=true';
+              }}
+              className="flex-1 flex items-center justify-center gap-2 text-amber-300 hover:text-amber-200 border-amber-500/30 hover:bg-amber-500/10"
+            >
+              <Trophy className="w-5 h-5 text-amber-400" />
+              <span>Ver Ranking</span>
+            </BaseButton>
+          )}
 
           <BaseButton
             variant="secondary"

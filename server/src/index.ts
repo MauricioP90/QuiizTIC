@@ -63,7 +63,7 @@ const validarPersona = new ValidarPersona(personaRepo);
 const scenarioController = new ScenarioController(obtenerEscenarios);
 const participantController = new ParticipantController(registrarVehiculo, procesarRespuesta, validarPersona);
 const resultsController = new ResultsController(obtenerResultados);
-const leaderboardController = new LeaderboardController(obtenerLeaderboard);
+const leaderboardController = new LeaderboardController(obtenerLeaderboard, eventoRepo);
 const eventController = new EventController(gestionarEventos);
 
 // Montar el enrutador

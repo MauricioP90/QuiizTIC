@@ -39,6 +39,7 @@ export class TypeORMEventoRepository implements IEventoRepository {
     schema.categorias = Array.isArray(data.categorias) ? data.categorias.join(',') : '';
     schema.tema = data.tema || 'macarena';
     schema.tipoRegistro = data.tipoRegistro || 'VEHICULO';
+    schema.mostrarRanking = data.mostrarRanking !== undefined ? Boolean(data.mostrarRanking) : true;
     schema.activo = Boolean(data.activo);
 
     if (schema.activo) {
@@ -62,6 +63,7 @@ export class TypeORMEventoRepository implements IEventoRepository {
     schema.categorias = Array.isArray(evento.categorias) ? evento.categorias.join(',') : '';
     schema.tema = evento.tema || 'macarena';
     schema.tipoRegistro = evento.tipoRegistro || 'VEHICULO';
+    schema.mostrarRanking = evento.mostrarRanking !== undefined ? Boolean(evento.mostrarRanking) : true;
 
     if (evento.activo) {
       await AppDataSource.query(`UPDATE eventos SET activo = 0 WHERE activo = 1`);
@@ -136,6 +138,7 @@ export class TypeORMEventoRepository implements IEventoRepository {
       schema.tema || 'macarena',
       (schema.tipoRegistro as TipoRegistro) || 'VEHICULO',
       Boolean(schema.activo),
+      schema.mostrarRanking !== undefined ? Boolean(schema.mostrarRanking) : true,
       schema.creadoEn
     );
   }

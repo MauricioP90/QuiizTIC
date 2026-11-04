@@ -24,6 +24,7 @@ export class GestionarEventos {
     categorias: string[];
     tema: string;
     tipoRegistro?: TipoRegistro;
+    mostrarRanking?: boolean;
     activo: boolean;
   }): Promise<Evento> {
     return this.eventoRepo.crear({
@@ -34,6 +35,7 @@ export class GestionarEventos {
       categorias: data.categorias || [],
       tema: data.tema || 'macarena',
       tipoRegistro: data.tipoRegistro || 'VEHICULO',
+      mostrarRanking: data.mostrarRanking !== undefined ? Boolean(data.mostrarRanking) : true,
       activo: Boolean(data.activo)
     });
   }
@@ -47,6 +49,7 @@ export class GestionarEventos {
     categorias: string[];
     tema: string;
     tipoRegistro?: TipoRegistro;
+    mostrarRanking?: boolean;
     activo: boolean;
   }): Promise<Evento> {
     const evento = new Evento(
@@ -58,7 +61,8 @@ export class GestionarEventos {
       data.categorias || [],
       data.tema || 'macarena',
       data.tipoRegistro || 'VEHICULO',
-      Boolean(data.activo)
+      Boolean(data.activo),
+      data.mostrarRanking !== undefined ? Boolean(data.mostrarRanking) : true
     );
     return this.eventoRepo.actualizar(evento);
   }

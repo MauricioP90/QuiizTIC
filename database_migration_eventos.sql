@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS eventos (
   categorias TEXT NOT NULL COMMENT 'Categorías permitidas separadas por comas (o vacío para todas)',
   tema VARCHAR(50) NOT NULL DEFAULT 'cyber' COMMENT 'cyber | navidad | halloween | macarena',
   tipo_registro VARCHAR(20) NOT NULL DEFAULT 'VEHICULO' COMMENT 'VEHICULO | CEDULA',
+  mostrar_ranking BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Indica si los participantes pueden ver la tabla de posiciones',
   activo BOOLEAN NOT NULL DEFAULT FALSE,
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -30,6 +31,21 @@ SET @sql_tipo_reg := IF(@col_exist_tipo_reg = 0,
 PREPARE stmt_tipo_reg FROM @sql_tipo_reg;
 EXECUTE stmt_tipo_reg;
 DEALLOCATE PREPARE stmt_tipo_reg;
+
+-- Agregar columna mostrar_ranking si eventos ya existía
+SET @col_exist_mostrar_ranking := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS 
+  WHERE TABLE_SCHEMA = DATABASE() 
+    AND TABLE_NAME = 'eventos' 
+    AND COLUMN_NAME = 'mostrar_ranking'
+);
+SET @sql_mostrar_ranking := IF(@col_exist_mostrar_ranking = 0, 
+  'ALTER TABLE eventos ADD COLUMN mostrar_ranking BOOLEAN NOT NULL DEFAULT TRUE;', 
+  'SELECT "Columna mostrar_ranking ya existe en eventos";'
+);
+PREPARE stmt_mostrar_ranking FROM @sql_mostrar_ranking;
+EXECUTE stmt_mostrar_ranking;
+DEALLOCATE PREPARE stmt_mostrar_ranking;
 
 -- 2. Insertar evento inicial por defecto
 INSERT INTO eventos (id, nombre, descripcion, categorias, tema, tipo_registro, activo)
