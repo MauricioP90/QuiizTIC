@@ -1,166 +1,236 @@
 # Especificaciones Técnicas, Flujos de Datos y Arquitectura
 
-Este archivo complementa el Plan de Trabajo Maestro, proporcionando diagramas detallados, especificaciones del flujo lógico e instrucciones de bajo nivel para codificar la aplicación interactiva utilizando Node.js, TypeScript y React/Vite.
+Este archivo documenta detalladamente la arquitectura del sistema, diagramas de flujo, estructura de directorios, modelo de datos relacional y contratos de bajo nivel para **QuizzTIC**, utilizando Node.js, Express, TypeScript, TypeORM, MySQL y React/Vite.
 
-🗺️ Mapa de Flujo del Sistema (Workflow de Usuario)
-A continuación se detalla el ciclo de vida completo de un usuario desde el punto de acceso físico/digital hasta la finalización de la actividad pedagógica:
+---
 
-```plaintext
-       [ Código QR Físico / Digital ]
-                     │
-                     ▼ Escaneo con Smartphone
-       [ URL de la Aplicación Web (HTTPS) ]
-                     │
-                     ▼ Carga inicial
-            ┌────────┴────────┐
-            │ ¿Existe Cookie? │
-            └────────┬────────┘
-                     │
-            ┌────────┴────────────────┐
-            ▼ NO                      ▼ SÍ (Sesión Activa)
-   [ Pantalla de Bienvenida ]    [ Obtener Situación Aleatoria ]
-            │                                 │
-            ▼ Acción: Comenzar                │
-   [ Registro de Usuario ]                    │
-   (Nombre, ID, Área, etc.)                  │
-            │                                 │
-            ▼ Acción: Enviar Formulario       │
-   [ Guardar Participante ]                   │
-   (Escribe Cookie + DB/API)                  │
-            │                                 │
-            └────────────────────────┬────────┘
-                                     │
-                                     ▼
-                       [ Mostrar Escenario / Situación ]
-                       (Renderiza Texto + Temporizador 10s)
-                                     │
-                                     ▼ Interacción del Usuario
-                       [ Usuario Responde Opción ]
-                       (Selecciona: ¿Buena o Mala Práctica?)
-                                     │
-                                     ▼
-                             [ Validar Respuesta ]
-                     Compara Selección vs. Tipo de Práctica
-                                     │
-                                     ▼
-                            [ Actualizar Puntaje ]
-                         (Suma +1 si es Correcta)
-                                     │
-                                     ▼
-                           [ Mostrar Resultado ]
-                     ┌───────────────┴───────────────┐
-                     ▼                               ▼
-             [ Feedback Visual ]             [ Pausa Pedagógica ]
-           (Color Verde o Rojo)            Despliega Explicación:
-                                           • Riesgo / Beneficio
-                                           • Recomendación
-                                                     │
-                                                     ▼ Transcurre setTimeout (1.5s - 3s)
-                                           ¿Quedan más escenarios?
-                                           ┌─────────┴─────────┐
-                                           ▼ SÍ                ▼ NO
-                                    Siguiente Escenario  [ Pantalla de Resultados ]
-                                                               │
-                                                               ▼
-                                                     [ Gracias por Participar ]
-                                                     (Opciones: Reiniciar / Ver historial)
-```
-
-🗂️ Arquitectura Detallada de Carpetas (Estructura de Código)
-Para garantizar el desacoplamiento de código sugerido en el enfoque de Arquitectura Limpia, la estructura en TypeScript se implementará bajo las siguientes directrices rigurosas:
+## 🗺️ Mapa de Flujo del Sistema (Workflow de Usuario y Administrador)
 
 ```plaintext
-src/
-│
-├── domain/
-│   ├── entities/
-│   │   ├── Scenario.ts       # Contrato e interfaz del modelo de escenarios.
-│   │   ├── Participant.ts    # Estructura de datos del usuario registrado.
-│   │   └── GameSession.ts    # Estado de la partida actual (puntaje, aciertos).
-│   ├── repositories/
-│   │   ├── IScenarioRepository.ts    # Definición de interfaz para recuperar preguntas.
-│   │   └── IParticipantRepository.ts  # Definición de interfaz para persistir usuarios.
-│   └── services/
-│       └── GameLogicService.ts        # Algoritmia pura para verificar respuestas y calcular notas.
-│
-├── application/
-│   ├── use-cases/
-│   │   ├── GetRandomScenarios.ts      # Caso de uso: Selecciona 'N' escenarios aleatorios del pool.
-│   │   ├── RegisterNewParticipant.ts  # Caso de uso: Valida datos y gatilla guardado de participante.
-│   │   └── ProcessAnswer.ts           # Caso de uso: Procesa la opción elegida y actualiza la sesión.
-│
-├── infrastructure/
-│   ├── database/
-│   │   ├── CookieManager.ts           # Utilidad nativa de lectura/escritura de Cookies seguras.
-│   │   └── LocalStorageDb.ts          # Respaldo local de datos en formato Clave-Valor.
-│   ├── repositories/
-│   │   ├── MockScenarioRepository.ts  # Implementación concreta que lee desde JSON estático.
-│   │   └── ApiParticipantRepository.ts # Implementación concreta que envía datos al backend mediante Fetch/Axios.
-│   └── api/
-│       └── ApiClient.ts               # Configuración base de llamadas HTTP (Node.js/Axios client).
-│
-├── presentation/
-│   ├── controllers/
-│   │   └── useGameController.ts       # React Hook personalizado. Maneja la máquina de estados del juego.
-│   ├── components/
-│   │   ├── ScenarioCard.tsx           # Renderiza la situación actual.
-│   │   ├── GameTimer.tsx              # Componente lógico del reloj de 10 segundos.
-│   │   └── FeedbackModal.tsx          # Componente modal de la Pausa Pedagógica.
-│   └── views/
-│       ├── WelcomeView.tsx            # Vista de la Landing Page.
-│       ├── RegistrationView.tsx       # Vista del Formulario.
-│       ├── GameplayView.tsx           # Contenedor principal de la experiencia de juego.
-│       └── SummaryView.tsx            # Pantalla final de resultados pedagógicos.
-│
-└── shared/
-    ├── components/
-    │   ├── BaseButton.tsx             # Botón genérico estilizado con variantes (primario, peligro).
-    │   └── ProgressBar.tsx            # Barra de progreso genérica.
-    └── utils/
-        └── Environment.ts             # Variables de entorno fuertemente tipadas.
+                              [ Código QR / Enlace Web HTTPS ]
+                                              │
+                                              ▼ Carga inicial
+                                   [ GET /api/events/active ]
+                                   (Obtiene Tema, Modo Registro,
+                                    Filtro de Categorías y Ranking)
+                                              │
+                     ┌────────────────────────┴────────────────────────┐
+                     ▼                                                 ▼
+             [ Ruta: /admin ]                                  [ Ruta: / (Trivia) ]
+                     │                                                 │
+          ┌──────────┴──────────┐                             ┌────────┴────────┐
+          │ ¿PIN Admin Válido?  │                             │ ¿Existe Sesión? │
+          └──────────┬──────────┘                             └────────┬────────┘
+                     │                                                 │
+            ┌────────┴────────┐                               ┌────────┴────────┐
+            ▼ NO              ▼ SÍ                            ▼ NO              ▼ SÍ
+     [ Error / PIN ]   [ Panel Admin ]                 [ Bienvenida ]     [ Cargar Trivia ]
+                       • Crear/Editar Eventos                 │                 │
+                       • Modalidad (Vehículo/Cédula)          ▼ Comenzar        │
+                       • Categorías y Temas            [ Form Registro ]        │
+                       • Mostrar/Ocultar Ranking              │                 │
+                       • Monitoreo Top 10 en Vivo             ▼ Validar         │
+                                                       (Vehículo o Cédula       │
+                                                        en permisos.personas)   │
+                                                              │                 │
+                                                              ▼ SÍ              │
+                                                       [ Iniciar Sesión ] ◄─────┘
+                                                              │
+                                                              ▼
+                                                [ Carga de Escenarios Aleatorios ]
+                                                (GET /api/scenarios?evento=ID)
+                                                              │
+                                                              ▼
+                                                [ Escenario y Temporizador (180s) ]
+                                                (Evalúa: ¿Buena o Mala Práctica?)
+                                                              │
+                                                              ▼
+                                                [ POST /api/answers ]
+                                                • Guarda respuesta en registro_respuestas
+                                                • Incrementa puntos en puntos_acumulados
+                                                              │
+                                                              ▼
+                                                [ Pausa Pedagógica (Feedback Visual) ]
+                                                • Riesgo / Beneficio
+                                                • Recomendación Práctica
+                                                              │
+                                                              ▼
+                                                   ¿Quedan más escenarios?
+                                                    ┌─────────┴─────────┐
+                                                    ▼ SÍ                ▼ NO
+                                             Siguiente Escenario  [ Pantalla de Resumen ]
+                                                                  (Resumen ronda + histórico)
+                                                                        │
+                                                   ┌────────────────────┴────────────────────┐
+                                                   ▼ Si mostrar_ranking = TRUE               ▼ Si mostrar_ranking = FALSE
+                                            [ Botón "Ver Ranking" ]                   [ Botón oculto para participantes ]
+                                                   │                                         │
+                                                   ▼                                         ▼
+                                            [ GET /api/leaderboard ]                  [ Pantalla de Suspenso ]
+                                            (Top 10 Oficial en Vivo)                  (🔒 Podio en modo secreto)
 ```
 
-💻 Especificaciones de Código e Interfaces Base (TypeScript)
-Para guiar de manera inequívoca a la IA de generación de código, se proveen los contratos principales de TypeScript que gobernarán las capas del dominio y aplicación:
+---
 
-1. Entidad de Escenario (src/domain/entities/Scenario.ts)
-```TypeScript
-export type PracticeType = 'BUENA' | 'MALA';
+## 🗂️ Arquitectura Detallada de Carpetas (Clean Architecture)
 
-export interface Scenario {
-  id: string;
-  contexto: string;
-  tipoPractica: PracticeType;
-  riesgoBeneficio: string;
-  recomendacion: string;
-}
+El proyecto implementa el principio de Puertos y Adaptadores (Arquitectura Hexagonal) tanto en el servidor como en el cliente:
+
+```plaintext
+QuizzTIC/
+├── server/                                  # BACKEND NODE.JS + EXPRESS + TYPEORM
+│   └── src/
+│       ├── domain/                          # CAPA DE DOMINIO (Entidades y Puertos)
+│       │   ├── entities/
+│       │   │   ├── Evento.ts                # Entidad de Evento (Nombre, Tema, Registro, Visibilidad)
+│       │   │   ├── Pregunta.ts              # Escenario táctico de aprendizaje
+│       │   │   ├── Vehiculo.ts              # Registro de vehículo o participante
+│       │   │   ├── RegistroRespuesta.ts     # Bitácora de respuestas
+│       │   │   └── PuntosAcumulados.ts      # Tabla agregada de puntajes
+│       │   └── ports/                       # Interfaces abstractas de repositorios
+│       │       ├── IEventoRepository.ts
+│       │       ├── IPreguntaRepository.ts
+│       │       ├── IVehiculoRepository.ts
+│       │       ├── IRegistroRespuestaRepository.ts
+│       │       ├── IPuntosAcumuladosRepository.ts
+│       │       └── IPersonaRepository.ts
+│       │
+│       ├── application/                     # CAPA DE APLICACIÓN (Casos de Uso)
+│       │   └── use-cases/
+│       │       ├── GestionarEventos.ts      # CRUD y activación de eventos
+│       │       ├── ObtenerEscenarios.ts     # Filtro y selección aleatoria por categoría
+│       │       ├── RegistrarVehiculo.ts     # Alta o validación de participante
+│       │       ├── ValidarPersona.ts        # Consulta contra permisos.personas
+│       │       ├── ProcesarRespuesta.ts     # Calificación y actualización de saldo de puntos
+│       │       ├── ObtenerResultados.ts     # Acumulados históricos del participante
+│       │       └── ObtenerLeaderboard.ts    # Consulta del Top 10 con control de visibilidad
+│       │
+│       └── infrastructure/                  # CAPA DE INFRAESTRUCTURA (Adaptadores)
+│           └── adapters/
+│               ├── db/                      # Adaptadores Secundarios (Persistencia TypeORM)
+│               │   ├── DataSource.ts        # Pool de conexión MySQL
+│               │   ├── initDb.ts            # Migración y verificación automática de esquema
+│               │   └── entities/            # Schemas TypeORM mapeados a tablas MySQL
+│               │       ├── EventoSchema.ts
+│               │       ├── PreguntaSchema.ts
+│               │       ├── VehiculoSchema.ts
+│               │       ├── RegistroRespuestaSchema.ts
+│               │       └── PuntosAcumuladosSchema.ts
+│               ├── repositories/            # Implementaciones concretas de TypeORM
+│               │   ├── TypeORMEventoRepository.ts
+│               │   ├── TypeORMPreguntaRepository.ts
+│               │   ├── TypeORMVehiculoRepository.ts
+│               │   ├── TypeORMRegistroRespuestaRepository.ts
+│               │   ├── TypeORMPuntosAcumuladosRepository.ts
+│               │   └── TypeORMPersonaRepository.ts
+│               └── http/                    # Adaptadores Primarios (Controladores HTTP)
+│                   ├── routes.ts            # Enrutador Express centralizado
+│                   └── controllers/
+│                       ├── EventController.ts
+│                       ├── ScenarioController.ts
+│                       ├── ParticipantController.ts
+│                       ├── ResultsController.ts
+│                       └── LeaderboardController.ts
+│
+└── src/                                     # FRONTEND REACT 19 + VITE + TAILWIND
+    ├── domain/                              # Modelos de datos del cliente
+    │   └── entities/
+    │       ├── Scenario.ts
+    │       ├── Participant.ts
+    │       └── GameSession.ts
+    ├── presentation/                        # Vistas y Controladores React
+    │   ├── controllers/
+    │   │   └── useGameController.ts         # Hook principal de estado de la partida
+    │   ├── views/
+    │   │   ├── WelcomeView.tsx              # Portada con selector de inicio y ranking
+    │   │   ├── RegistrationView.tsx         # Formulario dual (Vehículo / Cédula)
+    │   │   ├── GameplayView.tsx             # Pantalla de juego y temporizador
+    │   │   ├── SummaryView.tsx              # Resultados y desglose educativo
+    │   │   ├── LeaderboardView.tsx          # Tabla de posiciones y pantalla de suspenso
+    │   │   └── AdminView.tsx                # Panel de control de eventos y temas
+    │   └── components/                      # Componentes atómicos de interfaz
+    └── shared/                              # Contextos transversales y temas
+        ├── context/
+        │   └── EventContext.tsx             # Estado global del evento y tema activo
+        └── theme/
+            └── themeConfig.ts               # Paletas visuales y configuración de fondos
 ```
 
-2. Entidad de Participante (src/domain/entities/Participant.ts)
-```TypeScript
-export interface Participant {
-  uuid: string;
-  nombre: string;
-  correo: string;
-  areaTrabajo?: string;
-  registradoEn: Date;
-}
+---
+
+## 🗄️ Esquema Relacional de Base de Datos (MySQL)
+
+```sql
+-- 1. Tabla de Eventos / Campañas
+CREATE TABLE IF NOT EXISTS eventos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(150) NOT NULL,
+  descripcion TEXT NULL,
+  fecha_inicio DATETIME NULL,
+  fecha_fin DATETIME NULL,
+  categorias TEXT NOT NULL,                     -- Lista de categorías separadas por coma
+  tema VARCHAR(50) NOT NULL DEFAULT 'cyber',    -- 'macarena' | 'cyber' | 'halloween' | 'navidad'
+  tipo_registro VARCHAR(20) NOT NULL DEFAULT 'VEHICULO', -- 'VEHICULO' | 'CEDULA'
+  mostrar_ranking BOOLEAN NOT NULL DEFAULT TRUE,-- Control de visibilidad del ranking
+  activo BOOLEAN NOT NULL DEFAULT FALSE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Tabla de Preguntas / Escenarios
+CREATE TABLE IF NOT EXISTS preguntas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  categoria VARCHAR(100) NOT NULL,
+  contexto TEXT NOT NULL,
+  tipo_practica ENUM('BUENA', 'MALA') NOT NULL,
+  riesgo_beneficio TEXT NOT NULL,
+  recomendacion TEXT NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. Bitácora de Respuestas
+CREATE TABLE IF NOT EXISTS registro_respuestas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_evento INT NOT NULL DEFAULT 1,
+  numero_vehiculo VARCHAR(20) NOT NULL,
+  documento VARCHAR(50) NULL,
+  nombre_participante VARCHAR(150) NULL,
+  rol ENUM('PROPIETARIO', 'OPERADOR') NOT NULL,
+  id_pregunta INT NOT NULL,
+  respuesta_seleccionada ENUM('BUENA', 'MALA') NOT NULL,
+  es_correcta BOOLEAN NOT NULL,
+  puntos_ganados INT NOT NULL DEFAULT 0,
+  fecha_respuesta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_resp_evento_participante (id_evento, numero_vehiculo, rol)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Puntos Acumulados (Consolidado de Ranking)
+CREATE TABLE IF NOT EXISTS puntos_acumulados (
+  numero_vehiculo VARCHAR(20) NOT NULL,
+  rol ENUM('PROPIETARIO', 'OPERADOR') NOT NULL,
+  id_evento INT NOT NULL DEFAULT 1,
+  documento VARCHAR(50) NULL,
+  nombre_participante VARCHAR(150) NULL,
+  preguntas_acertadas INT NOT NULL DEFAULT 0,
+  preguntas_erradas INT NOT NULL DEFAULT 0,
+  total_preguntas INT NOT NULL DEFAULT 0,
+  total_puntos_acumulados INT NOT NULL DEFAULT 0,
+  ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (numero_vehiculo, rol, id_evento),
+  INDEX idx_puntos_evento_ranking (id_evento, total_puntos_acumulados DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-3. Interfaz de Repositorio de Escenarios (src/domain/repositories/IScenarioRepository.ts)
-```TypeScript
-import { Scenario } from '../entities/Scenario';
+---
 
-export interface IScenarioRepository {
-  getAllScenarios(): Promise<Scenario[]>;
-  getScenariosByCampaign(campaignId: string): Promise<Scenario[]>;
-}
-```
+## 🔒 Mecanismos de Seguridad y Rendimiento
 
-🤖 Directivas de Implementación para el Generador Automático (Prompt Engine)
-Al pasar estos archivos a la IA encargada de la codificación, instrúyase lo siguiente:
-
-- Estricto TypeScript: No se permite el uso de any. Todos los componentes de React deben tiparse usando React.FC o retornos explícitos de JSX.
-- Estilos Aislados: Utilizar Tailwind CSS para el manejo del diseño mobile-first. Asegurar que las clases de feedback (bg-green-600, bg-red-600) se inyecten dinámicamente según el estado evaluado por el controlador.
-- Manejo de Efectos: El componente GameTimer.tsx debe limpiar sus intervalos (clearInterval) en el retorno de su useEffect para mitigar fugas de memoria (memory leaks).
-- Cumplimiento de Clean Architecture: Los componentes de la vista en presentation/ nunca deben invocar directamente a CookieManager o APIs externas; siempre deben hacerlo a través de las funciones expuestas por el Hook Controlador (useGameController), el cual a su vez invoca a los Casos de Uso (application/use-cases/).
+1. **Protección del Leaderboard y Modo Suspenso:**
+   - La API `/api/leaderboard` evalúa la visibilidad configurada para el evento.
+   - Si `mostrar_ranking === false` y la petición no incluye el header de autorización `x-admin-pin`, el backend bloquea la respuesta con código `403` y bandera `rankingOculto: true`.
+   - El panel `/admin` permite supervisión del ranking en vivo ininterrumpida.
+2. **Rate Limiting por IP:**
+   - Para prevenir escaneos y ataques de fuerza bruta al consultar cédulas en `/api/participants/validate/:documento`, se aplica un limitador de memoria que restringe el tráfico a 30 peticiones por minuto por dirección IP.
+3. **Credenciales y Tokens Seguros:**
+   - Cero credenciales o PINs de administración expuestos en bundles estáticos de React. La autenticación se verifica exclusivamente en el servidor Express vía variables de entorno (`ADMIN_PIN`).
+4. **Optimización de Activos Web:**
+   - Fondos fotográficos optimizados para transferencia ultra-ligera (<130 KB), evitando fallos de carga en redes móviles lentas o límites de tamaño de carga HTTP 413 en el proxy Nginx de GitLab.
