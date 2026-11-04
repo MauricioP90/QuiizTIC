@@ -13,8 +13,12 @@ export class LeaderboardController {
       return;
     }
 
+    const { evento } = req.query;
+
     try {
-      const top10 = await this.obtenerLeaderboardUseCase.execute();
+      const top10 = await this.obtenerLeaderboardUseCase.execute(
+        evento ? parseInt(String(evento)) : undefined
+      );
       res.json(top10);
     } catch (error) {
       console.error('Error al obtener la tabla de posiciones:', error);

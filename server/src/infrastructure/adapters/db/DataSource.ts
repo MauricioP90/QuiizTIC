@@ -7,6 +7,7 @@ import { PreguntaSchema } from './entities/PreguntaSchema.js';
 import { VehiculoSchema } from './entities/VehiculoSchema.js';
 import { RegistroRespuestaSchema } from './entities/RegistroRespuestaSchema.js';
 import { PuntosAcumuladosSchema } from './entities/PuntosAcumuladosSchema.js';
+import { EventoSchema } from './entities/EventoSchema.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +28,8 @@ export const AppDataSource = new DataSource({
     PreguntaSchema,
     VehiculoSchema,
     RegistroRespuestaSchema,
-    PuntosAcumuladosSchema
+    PuntosAcumuladosSchema,
+    EventoSchema
   ],
   subscribers: [],
   migrations: [],

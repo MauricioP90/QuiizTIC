@@ -16,6 +16,9 @@ export class TypeORMRegistroRespuestaRepository implements IRegistroRespuestaRep
     schema.idPregunta = registro.idPregunta;
     schema.resultado = registro.resultado;
     schema.puntos = registro.puntos;
+    schema.idEvento = registro.idEvento || 1;
+    schema.documento = registro.documento || null;
+    schema.nombreParticipante = registro.nombreParticipante || null;
 
     const guardado = await this.repo.save(schema);
 
@@ -26,26 +29,42 @@ export class TypeORMRegistroRespuestaRepository implements IRegistroRespuestaRep
       guardado.idPregunta,
       guardado.resultado,
       guardado.puntos,
+      guardado.idEvento,
+      guardado.documento,
+      guardado.nombreParticipante,
       guardado.respondidoEn
     );
   }
 
-  async obtenerUltimasPorVehiculo(numeroVehiculo: string, rol: RolParticipante, limite: number): Promise<RegistroRespuestaDetallado[]> {
+  async obtenerUltimasPorVehiculo(
+    numeroVehiculo: string,
+    rol: RolParticipante,
+    limite: number,
+    idEvento?: number
+  ): Promise<RegistroRespuestaDetallado[]> {
+    const where: any = { numeroVehiculo, rol };
+    if (idEvento) {
+      where.idEvento = idEvento;
+    }
+
     const schemas = await this.repo.find({
       relations: { pregunta: true },
-      where: { numeroVehiculo, rol },
+      where,
       order: { respondidoEn: 'DESC' },
       take: limite
     });
 
-    return schemas.map((schema) => new RegistroRespuestaDetallado(
-      schema.idPregunta,
-      schema.resultado,
-      schema.puntos,
-      schema.pregunta.contexto,
-      schema.pregunta.tipoPractica,
-      schema.pregunta.riesgoBeneficio,
-      schema.pregunta.recomendacion
-    ));
+    return schemas.map(
+      (schema) =>
+        new RegistroRespuestaDetallado(
+          schema.idPregunta,
+          schema.resultado,
+          schema.puntos,
+          schema.pregunta?.contexto || '',
+          schema.pregunta?.tipoPractica || 'BUENA',
+          schema.pregunta?.riesgoBeneficio || '',
+          schema.pregunta?.recomendacion || ''
+        )
+    );
   }
 }

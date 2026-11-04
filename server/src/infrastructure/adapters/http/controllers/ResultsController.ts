@@ -6,7 +6,7 @@ export class ResultsController {
 
   async getResults(req: Request, res: Response): Promise<void> {
     const { vehiculo } = req.params;
-    const { rol } = req.query;
+    const { rol, evento } = req.query;
 
     if (!vehiculo || !rol) {
       res.status(400).json({ error: 'Número de vehículo y rol son requeridos.' });
@@ -14,11 +14,15 @@ export class ResultsController {
     }
 
     try {
-      const results = await this.obtenerResultadosUseCase.execute(vehiculo, rol as any);
+      const results = await this.obtenerResultadosUseCase.execute(
+        vehiculo,
+        rol as any,
+        evento ? parseInt(String(evento)) : undefined
+      );
       res.json(results);
     } catch (error: any) {
       console.error('Error al obtener resultados:', error);
-      if (error.message === 'Vehículo no registrado o sin puntuaciones.') {
+      if (error.message && error.message.includes('no registrado')) {
         res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Error interno del servidor al recuperar los resultados.' });

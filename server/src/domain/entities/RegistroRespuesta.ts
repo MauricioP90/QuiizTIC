@@ -10,6 +10,9 @@ export class RegistroRespuesta {
     public readonly idPregunta: string,
     public readonly resultado: ResultadoRespuesta,
     public readonly puntos: number,
+    public readonly idEvento: number = 1,
+    public readonly documento?: string | null,
+    public readonly nombreParticipante?: string | null,
     public readonly respondidoEn?: Date
   ) {}
 }

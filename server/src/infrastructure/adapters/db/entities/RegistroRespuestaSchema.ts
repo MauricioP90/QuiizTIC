@@ -7,11 +7,20 @@ export class RegistroRespuestaSchema {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column({ name: 'id_evento', type: 'int', default: 1 })
+  idEvento!: number;
+
   @Column({ name: 'numero_vehiculo', type: 'varchar', length: 50 })
   numeroVehiculo!: string;
 
   @Column({ type: 'enum', enum: ['PROPIETARIO', 'OPERADOR'] })
   rol!: 'PROPIETARIO' | 'OPERADOR';
+
+  @Column({ name: 'documento', type: 'varchar', length: 50, nullable: true })
+  documento!: string | null;
+
+  @Column({ name: 'nombre_participante', type: 'varchar', length: 150, nullable: true })
+  nombreParticipante!: string | null;
 
   @Column({ name: 'id_pregunta', type: 'varchar', length: 50 })
   idPregunta!: string;
@@ -26,12 +35,12 @@ export class RegistroRespuestaSchema {
   respondidoEn!: Date;
 
   // Relaciones
-  @ManyToOne(() => VehiculoSchema, { onDelete: 'CASCADE' })
+  @ManyToOne(() => VehiculoSchema, { onDelete: 'CASCADE', nullable: true, createForeignKeyConstraints: false })
   @JoinColumn([
     { name: 'numero_vehiculo', referencedColumnName: 'numeroVehiculo' },
     { name: 'rol', referencedColumnName: 'rol' }
   ])
-  vehiculo!: VehiculoSchema;
+  vehiculo?: VehiculoSchema;
 
   @ManyToOne(() => PreguntaSchema, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_pregunta' })
