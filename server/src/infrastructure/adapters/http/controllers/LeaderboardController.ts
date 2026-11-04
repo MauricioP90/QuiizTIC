@@ -5,14 +5,6 @@ export class LeaderboardController {
   constructor(private readonly obtenerLeaderboardUseCase: ObtenerLeaderboard) {}
 
   async getLeaderboard(req: Request, res: Response): Promise<void> {
-    const adminPinHeader = req.headers['x-admin-pin'];
-    const expectedPin = process.env.ADMIN_PIN || '14789';
-
-    if (adminPinHeader !== expectedPin) {
-      res.status(401).json({ error: 'No autorizado. PIN de administrador inválido.' });
-      return;
-    }
-
     const { evento } = req.query;
 
     try {

@@ -4,13 +4,43 @@ import { ProcesarRespuesta } from '../../../../application/use-cases/ProcesarRes
 import { ValidarPersona } from '../../../../application/use-cases/ValidarPersona.js';
 
 export class ParticipantController {
+  private validationAttempts = new Map<string, { count: number; resetAt: number }>();
+
   constructor(
     private readonly registrarVehiculoUseCase: RegistrarVehiculo,
     private readonly procesarRespuestaUseCase: ProcesarRespuesta,
     private readonly validarPersonaUseCase: ValidarPersona
-  ) {}
+  ) {
+    // Limpieza periódica cada 5 minutos de intentos expirados
+    setInterval(() => {
+      const now = Date.now();
+      for (const [ip, entry] of this.validationAttempts.entries()) {
+        if (now > entry.resetAt) {
+          this.validationAttempts.delete(ip);
+        }
+      }
+    }, 300000);
+  }
 
   async validatePersona(req: Request, res: Response): Promise<void> {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const rateData = this.validationAttempts.get(ip);
+
+    // Límite de 30 consultas por minuto por cliente IP
+    if (rateData && now < rateData.resetAt) {
+      if (rateData.count >= 30) {
+        res.status(429).json({
+          valid: false,
+          error: 'Demasiadas consultas de documento en poco tiempo. Por favor espera un momento.'
+        });
+        return;
+      }
+      rateData.count++;
+    } else {
+      this.validationAttempts.set(ip, { count: 1, resetAt: now + 60000 });
+    }
+
     const { documento } = req.params;
     if (!documento || !documento.trim()) {
       res.status(400).json({ valid: false, error: 'El número de documento es obligatorio.' });

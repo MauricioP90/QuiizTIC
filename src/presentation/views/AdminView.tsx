@@ -24,8 +24,6 @@ import { getApiUrl } from '../../infrastructure/utils/apiHelper';
 import { THEMES, type ThemeId } from '../../shared/theme/themeConfig';
 import { useActiveEvent, type ActiveEventData, type TipoRegistro } from '../../shared/context/EventContext';
 
-const FRONTEND_PIN = '14789';
-
 interface LeaderboardEntry {
   numeroVehiculo: string;
   rol: 'PROPIETARIO' | 'OPERADOR';
@@ -68,26 +66,43 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [selectedEventForLeaderboard, setSelectedEventForLeaderboard] = useState<number | null>(null);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  const [adminPin, setAdminPin] = useState<string>('');
 
-  // Validar PIN
-  const handleLogin = (e: React.FormEvent) => {
+  // Validar PIN contra el backend
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    if (pinInput === FRONTEND_PIN) {
-      setIsAuthorized(true);
-    } else {
-      setAuthError('PIN de administrador incorrecto. Acceso denegado.');
-      setPinInput('');
+    const pinToTest = pinInput.trim();
+    if (!pinToTest) {
+      setAuthError('Por favor ingresa el PIN.');
+      return;
+    }
+
+    try {
+      const res = await fetch(getApiUrl('/api/events'), {
+        headers: { 'x-admin-pin': pinToTest }
+      });
+
+      if (res.ok) {
+        setAdminPin(pinToTest);
+        setIsAuthorized(true);
+      } else {
+        setAuthError('PIN de administrador incorrecto. Acceso denegado.');
+        setPinInput('');
+      }
+    } catch {
+      setAuthError('Error de conexión al validar el PIN.');
     }
   };
 
   // Cargar eventos y categorías
   const loadAdminData = async () => {
+    if (!adminPin) return;
     setIsLoadingData(true);
     try {
       const [eventsRes, catsRes] = await Promise.all([
-        fetch(getApiUrl('/api/events'), { headers: { 'x-admin-pin': FRONTEND_PIN } }),
-        fetch(getApiUrl('/api/events/categories'), { headers: { 'x-admin-pin': FRONTEND_PIN } })
+        fetch(getApiUrl('/api/events'), { headers: { 'x-admin-pin': adminPin } }),
+        fetch(getApiUrl('/api/events/categories'), { headers: { 'x-admin-pin': adminPin } })
       ]);
 
       if (catsRes.ok) {
@@ -117,13 +132,11 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
-  // Cargar ranking por evento
+  // Cargar ranking por evento (público)
   const loadLeaderboard = async (eventId: number) => {
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch(getApiUrl(`/api/leaderboard?evento=${eventId}`), {
-        headers: { 'x-admin-pin': FRONTEND_PIN }
-      });
+      const res = await fetch(getApiUrl(`/api/leaderboard?evento=${eventId}`));
       if (res.ok) {
         const data = await res.json();
         setLeaderboardEntries(data);
@@ -136,10 +149,10 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   useEffect(() => {
-    if (isAuthorized) {
+    if (isAuthorized && adminPin) {
       loadAdminData();
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, adminPin]);
 
   useEffect(() => {
     if (selectedEventForLeaderboard) {
@@ -153,7 +166,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     try {
       const res = await fetch(getApiUrl(`/api/events/${id}/activate`), {
         method: 'POST',
-        headers: { 'x-admin-pin': FRONTEND_PIN }
+        headers: { 'x-admin-pin': adminPin }
       });
       if (res.ok) {
         setStatusMessage({ type: 'success', text: `¡Evento #${id} activado con éxito!` });
@@ -225,7 +238,7 @@ export const AdminView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-pin': FRONTEND_PIN
+          'x-admin-pin': adminPin
         },
         body: JSON.stringify(payload)
       });

@@ -111,6 +111,33 @@ export async function initializeDatabaseSchema(dataSource: DataSource): Promise<
       console.warn('Nota al verificar claves foráneas de participantes:', fkErr);
     }
 
+    // 3.2 Crear índices de rendimiento si no existen
+    try {
+      const idxRanking = await dataSource.query(`
+        SELECT INDEX_NAME FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'puntos_acumulados' 
+          AND INDEX_NAME = 'idx_puntos_evento_ranking';
+      `);
+      if (idxRanking.length === 0) {
+        await dataSource.query(`CREATE INDEX idx_puntos_evento_ranking ON puntos_acumulados (id_evento, total_puntos_acumulados DESC);`);
+        console.log('Índice idx_puntos_evento_ranking creado con éxito.');
+      }
+
+      const idxRespEvento = await dataSource.query(`
+        SELECT INDEX_NAME FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'registro_respuestas' 
+          AND INDEX_NAME = 'idx_resp_evento_participante';
+      `);
+      if (idxRespEvento.length === 0) {
+        await dataSource.query(`CREATE INDEX idx_resp_evento_participante ON registro_respuestas (id_evento, numero_vehiculo, rol);`);
+        console.log('Índice idx_resp_evento_participante creado con éxito.');
+      }
+    } catch (idxErr) {
+      console.warn('Nota al verificar índices de rendimiento:', idxErr);
+    }
+
     // 4. Asegurar que exista al menos un evento activo por defecto
     const activeEvents = await dataSource.query(`SELECT id FROM eventos WHERE activo = 1 LIMIT 1;`);
     if (activeEvents.length === 0) {

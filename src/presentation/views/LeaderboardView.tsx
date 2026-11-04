@@ -16,8 +16,6 @@ interface LeaderboardEntry {
   totalPuntosAcumulados: number;
 }
 
-const FRONTEND_PIN = '14789'; // PIN esperado por el backend para autorizar la petición
-
 export const LeaderboardView: React.FC = () => {
   const { activeEvent, theme } = useActiveEvent();
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +40,7 @@ export const LeaderboardView: React.FC = () => {
         ? getApiUrl(`/api/leaderboard?evento=${activeEvent.id}`)
         : getApiUrl('/api/leaderboard');
 
-      const response = await fetch(url, {
-        headers: {
-          'x-admin-pin': FRONTEND_PIN
-        }
-      });
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setEntries(data);
